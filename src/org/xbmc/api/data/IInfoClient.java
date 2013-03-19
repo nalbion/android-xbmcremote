@@ -24,6 +24,7 @@ package org.xbmc.api.data;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.xbmc.api.business.INotifiableManager;
 import org.xbmc.api.object.FileLocation;
@@ -77,6 +78,14 @@ public interface IInfoClient extends IClient {
 	 * @return
 	 */
 	public String getSystemInfo(INotifiableManager manager, int field);
+	
+	/**
+	 * Retrieve info labels about XBMC and the system
+	 * @param manager
+	 * @param labelNames
+	 * @return
+	 */
+	public Map<String, String> getInfoLabels(INotifiableManager manager, String[] labelNames);
 	
 	/**
 	 * Returns a boolean GUI setting

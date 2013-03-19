@@ -29,12 +29,32 @@
 				<org.xbmc.android.widget.FastScrollView
 					android:layout_width="fill_parent"
 					android:layout_height="fill_parent">
-					<ListView 
-						android:id="@+id/movielist_list"
+					<ListView
+					    android:id="@+id/movielist_list"
 						android:layout_height="fill_parent"
 						android:layout_width="fill_parent" 
 						style="@style/standard_list" />
 				</org.xbmc.android.widget.FastScrollView>
+			</LinearLayout>
+			
+			<!-- Movies (as shown on the screen) -->
+			<LinearLayout
+				android:id="@+id/screenmovielist_outer_layout" 
+				android:layout_width="fill_parent" android:layout_height="fill_parent"
+				android:orientation="vertical" android:fadingEdge="none" >
+				<include layout="@layout/titlebar" />
+				<include layout="@layout/listmessage" />
+				<org.xbmc.android.remote.presentation.widget.PagerContainer
+				    android:id="@+id/screenmoviepager_container"
+        			android:layout_width="match_parent"
+        			android:layout_height="wrap_content">
+					<!-- android:id="@+id/screenmovielist_list" -->
+					<android.support.v4.view.ViewPager
+						android:layout_height="300dp"
+						android:layout_width="200dp"
+						android:layout_gravity="center_horizontal">
+					</android.support.v4.view.ViewPager>
+				</org.xbmc.android.remote.presentation.widget.PagerContainer>
 			</LinearLayout>
 				
             <!-- Actors -->

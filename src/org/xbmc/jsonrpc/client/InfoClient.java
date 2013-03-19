@@ -3,9 +3,12 @@ package org.xbmc.jsonrpc.client;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Iterator;
+import java.util.Map;
 
 import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ArrayNode;
 import org.xbmc.api.business.INotifiableManager;
 import org.xbmc.api.data.IInfoClient;
 import org.xbmc.api.object.FileLocation;
@@ -118,6 +121,31 @@ public class InfoClient extends Client implements IInfoClient {
 	public String getSystemInfo(INotifiableManager manager, int field) {
 		JsonNode version = mConnection.getJson(manager, "Application.GetProperties", obj().p(PARAM_PROPERTIES, arr().add("version"))).get("version");
 		return getInt(version, "major") + "." + getInt(version, "minor") + " " + getString(version, "tag") + "\nGit: " + getString(version, "revision"); 
+	}
+	
+	/**
+	 * Retrieve info labels about XBMC and the system
+	 * @param manager
+	 * @param labelNames
+	 * @return
+	 */
+	public Map<String, String> getInfoLabels(INotifiableManager manager, String[] labelNames) {
+		ArrayNode labelsNode = arr();
+		int i = labelNames.length;
+		while( i-- != 0 ) {
+			labelsNode.add(labelNames[i]);
+		}
+		JsonNode result = mConnection.getJson(manager, "XBMC.GetInfoLabels", obj().p("labels", labelsNode));
+		
+		i = labelNames.length;
+		Map<String, String> labelValues = new HashMap<String, String>();
+		while( i-- != 0 ) {
+			String name = labelNames[i];
+			String value = result.get(name).getTextValue();
+			labelValues.put(name, value);
+		}
+		
+		return labelValues;
 	}
 	
 	/**

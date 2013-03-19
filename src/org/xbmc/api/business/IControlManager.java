@@ -33,6 +33,29 @@ import android.content.Context;
  * @author Team XBMC
  */
 public interface IControlManager extends IManager {
+	public enum NavigateCommand {
+		UP,
+		DOWN,
+		LEFT,
+		RIGHT,
+		SELECT
+	}
+
+	/**
+	 * Open a window on the XBMC screen
+	 * @param response
+	 * @param windowName - eg: "videos"
+	 * @param viewName - optional, eg: "MovieTitles"
+	 * @return true on success, false otherwise
+	 */
+	public void activateWindow(final DataResponse<Boolean> response, final String windowName, final String viewName, final Context context);
+	
+	/**
+	 * Open a window on the XBMC screen
+	 * @param response
+	 * @param command - UP/DOWN/LEFT/RIGHT/SELECT
+	 */
+	public void navigate(final DataResponse<Boolean> response, final NavigateCommand command, final Context context);
 	
 	/**
 	 * Starts playing the media file <code>filename</code> .

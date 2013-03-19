@@ -32,6 +32,7 @@ import org.xbmc.android.remote.presentation.widget.FiveLabelsItemView;
 import org.xbmc.android.util.ImportUtilities;
 import org.xbmc.api.business.DataResponse;
 import org.xbmc.api.business.IControlManager;
+import org.xbmc.api.business.IManager;
 import org.xbmc.api.business.ISortableManager;
 import org.xbmc.api.business.IVideoManager;
 import org.xbmc.api.object.Actor;
@@ -66,7 +67,7 @@ import android.widget.ArrayAdapter;
 import android.widget.ListAdapter;
 import android.widget.Toast;
 
-public class MovieListController extends ListController implements IController {
+public class MovieListController extends ListController implements IMovieListController {
 
 	private static final int mThumbSize = ThumbSize.SMALL;
 	public static final int ITEM_CONTEXT_PLAY = 1;
@@ -85,23 +86,16 @@ public class MovieListController extends ListController implements IController {
 	public static final int MENU_SORT_BY_DATE_ADDED_DESC = 28;
 	
 	
-	private Actor mActor;
-	private Genre mGenre;
+//	private MovieFilter mMovieFilter;
 	
-	private IVideoManager mVideoManager;
-	private IControlManager mControlManager;
+	private MovieControllerDelegate mDelegate;
 	
 	private boolean mLoadCovers = false;
 
 	private static Bitmap mWatchedBitmap;
 	
 	public void onCreate(Activity activity, Handler handler, AbsListView list) {
-		
-		mVideoManager = ManagerFactory.getVideoManager(this);
-		mControlManager = ManagerFactory.getControlManager(this);
-		
-		((ISortableManager)mVideoManager).setSortKey(AbstractManager.PREF_SORT_KEY_MOVIE);
-		((ISortableManager)mVideoManager).setPreferences(activity.getPreferences(Context.MODE_PRIVATE));
+		mDelegate = new MovieControllerDelegate(activity, this, this);
 		
 		final String sdError = ImportUtilities.assertSdCard();
 		mLoadCovers = sdError == null;
@@ -114,8 +108,10 @@ public class MovieListController extends ListController implements IController {
 				toast.show();
 			}
 			
-			mActor = (Actor)mActivity.getIntent().getSerializableExtra(ListController.EXTRA_ACTOR);
-			mGenre = (Genre)mActivity.getIntent().getSerializableExtra(ListController.EXTRA_GENRE);
+			mDelegate.initialise(activity);
+//			Actor actor = (Actor)activity.getIntent().getSerializableExtra(ListController.EXTRA_ACTOR);
+//			Genre genre = (Genre)activity.getIntent().getSerializableExtra(ListController.EXTRA_GENRE);
+//			initMovieFilter( actor, genre ); 
 			activity.registerForContextMenu(mList);
 			
 			mFallbackBitmap = BitmapFactory.decodeResource(activity.getResources(), R.drawable.default_poster);
@@ -132,33 +128,35 @@ public class MovieListController extends ListController implements IController {
 				}
 			});
 			mList.setOnKeyListener(new ListControllerOnKeyListener<Movie>());
-			fetch();
+			mDelegate.fetch(activity);
 		}
 	}
 	
-	private void fetch() {
-		final String title = mActor != null ? mActor.name + " - " : mGenre != null ? mGenre.name + " - " : "" + "Movies";
-		DataResponse<ArrayList<Movie>> response = new DataResponse<ArrayList<Movie>>() {
-			public void run() {
-				if (value.size() > 0) {
-					setTitle(title + " (" + value.size() + ")");
-					((AdapterView<ListAdapter>) mList).setAdapter(new MovieAdapter(mActivity, value));
-				} else {
-					setTitle(title);
-					setNoDataMessage("No movies found.", R.drawable.icon_movie_dark);
-				}
-			}
-		};
-		
-		showOnLoading();
-		setTitle(title + "...");
-		if (mActor != null) {						// movies with a certain actor
-			mVideoManager.getMovies(response, mActor, mActivity.getApplicationContext());
-		} else if (mGenre != null) {					// movies of a genre
-			mVideoManager.getMovies(response, mGenre, mActivity.getApplicationContext());
-		} else {									// all movies
-			mVideoManager.getMovies(response, mActivity.getApplicationContext());
-		}
+//	protected void initMovieFilter( Actor actor, Genre genre ) {
+//		mMovieFilter = new MovieFilter( actor, genre );
+//	}
+	
+//	private void fetch() {
+//		final String title = mMovieFilter.toString();
+//		DataResponse<ArrayList<Movie>> response = new DataResponse<ArrayList<Movie>>() {
+//			public void run() {
+//				if (value.size() > 0) {
+//					setTitle(title + " (" + value.size() + ")");
+//					((AdapterView<ListAdapter>) mList).setAdapter(new MovieAdapter(mActivity, value));
+//				} else {
+//					setTitle(title);
+//					setNoDataMessage("No movies found.", R.drawable.icon_movie_dark);
+//				}
+//			}
+//		};
+//		
+//		showOnLoading();
+//		setTitle(title + "...");
+//		mMovieFilter.getMovies(mVideoManager, response, mActivity);
+//	}
+	
+	public void updateMovieList( ArrayList<Movie> movies ) {
+		((AdapterView<ListAdapter>) mList).setAdapter(new MovieAdapter(mActivity, movies));
 	}
 	
 	/**
@@ -166,31 +164,32 @@ public class MovieListController extends ListController implements IController {
 	 * @param activity
 	 */
 	public void refreshMovieLibrary(final Activity activity) {
-		final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
-		builder.setMessage("Are you sure you want XBMC to rescan your movie library?")
-			.setCancelable(false)
-			.setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					mControlManager.updateLibrary(new DataResponse<Boolean>() {
-						public void run() {
-							final String message;
-							if (value) {
-								message = "Movie library updated has been launched.";
-							} else {
-								message = "Error launching movie library update.";
-							}
-							Toast toast = Toast.makeText(activity, message, Toast.LENGTH_SHORT);
-							toast.show();
-						}
-					}, "video", mActivity.getApplicationContext());
-				}
-			})
-			.setNegativeButton("Uh, no.", new DialogInterface.OnClickListener() {
-				public void onClick(DialogInterface dialog, int which) {
-					dialog.cancel();
-				}
-			});
-		builder.create().show();
+		mDelegate.refreshMovieLibrary(activity);
+//		final AlertDialog.Builder builder = new AlertDialog.Builder(activity);
+//		builder.setMessage("Are you sure you want XBMC to rescan your movie library?")
+//			.setCancelable(false)
+//			.setPositiveButton("Yes!", new DialogInterface.OnClickListener() {
+//				public void onClick(DialogInterface dialog, int which) {
+//					mControlManager.updateLibrary(new DataResponse<Boolean>() {
+//						public void run() {
+//							final String message;
+//							if (value) {
+//								message = "Movie library updated has been launched.";
+//							} else {
+//								message = "Error launching movie library update.";
+//							}
+//							Toast toast = Toast.makeText(activity, message, Toast.LENGTH_SHORT);
+//							toast.show();
+//						}
+//					}, "video", mActivity.getApplicationContext());
+//				}
+//			})
+//			.setNegativeButton("Uh, no.", new DialogInterface.OnClickListener() {
+//				public void onClick(DialogInterface dialog, int which) {
+//					dialog.cancel();
+//				}
+//			});
+//		builder.create().show();
 	}
 	
 	@Override
@@ -206,13 +205,14 @@ public class MovieListController extends ListController implements IController {
 		final Movie movie = (Movie)mList.getAdapter().getItem(((FiveLabelsItemView)((AdapterContextMenuInfo)item.getMenuInfo()).targetView).position);
 		switch (item.getItemId()) {
 			case ITEM_CONTEXT_PLAY:
-				mControlManager.playFile(new DataResponse<Boolean>() {
-					public void run() {
-						if (value) {
-							mActivity.startActivity(new Intent(mActivity, NowPlayingActivity.class));
-						}
-					}
-				}, movie.getPath(), 1, mActivity.getApplicationContext());
+				mDelegate.playMovie(mActivity, movie);
+//				mControlManager.playFile(new DataResponse<Boolean>() {
+//					public void run() {
+//						if (value) {
+//							mActivity.startActivity(new Intent(mActivity, NowPlayingActivity.class));
+//						}
+//					}
+//				}, movie.getPath(), 1, mActivity.getApplicationContext());
 				break;
 			case ITEM_CONTEXT_INFO:
 				Intent nextActivity = new Intent(mActivity, MovieDetailsActivity.class);
@@ -249,93 +249,97 @@ public class MovieListController extends ListController implements IController {
 	
 	@Override
 	public void onCreateOptionsMenu(Menu menu) {
-		if (mActor != null || mGenre != null) {
-			menu.add(0, MENU_PLAY_ALL, 0, "Play all").setIcon(R.drawable.menu_album);
-		}
-		SubMenu sortMenu = menu.addSubMenu(0, MENU_SORT, 0, "Sort").setIcon(R.drawable.menu_sort);
-		sortMenu.add(2, MENU_SORT_BY_TITLE_ASC, 0, "by Title ascending");
-		sortMenu.add(2, MENU_SORT_BY_TITLE_DESC, 0, "by Title descending");
-		sortMenu.add(2, MENU_SORT_BY_YEAR_ASC, 0, "by Year ascending");
-		sortMenu.add(2, MENU_SORT_BY_YEAR_DESC, 0, "by Year descending");
-		sortMenu.add(2, MENU_SORT_BY_RATING_ASC, 0, "by Rating ascending");
-		sortMenu.add(2, MENU_SORT_BY_RATING_DESC, 0, "by Rating descending");
-		sortMenu.add(2, MENU_SORT_BY_DATE_ADDED_ASC, 0, "by Date Added ascending");
-		sortMenu.add(2, MENU_SORT_BY_DATE_ADDED_DESC, 0, "by Date Added descending");
-//		menu.add(0, MENU_SWITCH_VIEW, 0, "Switch view").setIcon(R.drawable.menu_view);
-		createShowHideWatchedToggle(menu);
+		mDelegate.onCreateOptionsMenu(menu);
+//		if (mMovieFilter.isFilterSet()) {
+//			menu.add(0, MENU_PLAY_ALL, 0, "Play all").setIcon(R.drawable.menu_album);
+//		}
+//		SubMenu sortMenu = menu.addSubMenu(0, MENU_SORT, 0, "Sort").setIcon(R.drawable.menu_sort);
+//		sortMenu.add(2, MENU_SORT_BY_TITLE_ASC, 0, "by Title ascending");
+//		sortMenu.add(2, MENU_SORT_BY_TITLE_DESC, 0, "by Title descending");
+//		sortMenu.add(2, MENU_SORT_BY_YEAR_ASC, 0, "by Year ascending");
+//		sortMenu.add(2, MENU_SORT_BY_YEAR_DESC, 0, "by Year descending");
+//		sortMenu.add(2, MENU_SORT_BY_RATING_ASC, 0, "by Rating ascending");
+//		sortMenu.add(2, MENU_SORT_BY_RATING_DESC, 0, "by Rating descending");
+//		sortMenu.add(2, MENU_SORT_BY_DATE_ADDED_ASC, 0, "by Date Added ascending");
+//		sortMenu.add(2, MENU_SORT_BY_DATE_ADDED_DESC, 0, "by Date Added descending");
+////		menu.add(0, MENU_SWITCH_VIEW, 0, "Switch view").setIcon(R.drawable.menu_view);
+//		createShowHideWatchedToggle(menu);
 	}
 	
 	@Override
 	public void onOptionsItemSelected(MenuItem item) {
-		final SharedPreferences.Editor ed;
-		switch (item.getItemId()) {
-		case MENU_PLAY_ALL:
-			break;
-		case MENU_SORT_BY_TITLE_ASC:
-			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
-			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.TITLE);
-			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_ASC);
-			ed.commit();
-			fetch();
-			break;
-		case MENU_SORT_BY_TITLE_DESC:
-			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
-			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.TITLE);
-			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_DESC);
-			ed.commit();
-			fetch();
-			break;
-		case MENU_SORT_BY_YEAR_ASC:
-			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
-			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.YEAR);
-			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_ASC);
-			ed.commit();
-			fetch();
-			break;
-		case MENU_SORT_BY_YEAR_DESC:
-			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
-			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.YEAR);
-			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_DESC);
-			ed.commit();
-			fetch();
-			break;
-		case MENU_SORT_BY_RATING_ASC:
-			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
-			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.RATING);
-			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_ASC);
-			ed.commit();
-			fetch();
-			break;
-		case MENU_SORT_BY_RATING_DESC:
-			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
-			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.RATING);
-			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_DESC);
-			ed.commit();
-			fetch();
-			break;
-		case MENU_SORT_BY_DATE_ADDED_ASC:
-			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
-			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.DATE_ADDED);
-			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_ASC);
-			ed.commit();
-			fetch();
-			break;
-		case MENU_SORT_BY_DATE_ADDED_DESC:
-			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
-			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.DATE_ADDED);
-			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_DESC);
-			ed.commit();
-			fetch();
-			break;
-		default:
+		if( !mDelegate.onOptionsItemSelected(item, mActivity) ) {
 			super.onOptionsItemSelected(item);
 		}
+//		final SharedPreferences.Editor ed;
+//		switch (item.getItemId()) {
+//		case MENU_PLAY_ALL:
+//			break;
+//		case MENU_SORT_BY_TITLE_ASC:
+//			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
+//			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.TITLE);
+//			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_ASC);
+//			ed.commit();
+//			fetch();
+//			break;
+//		case MENU_SORT_BY_TITLE_DESC:
+//			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
+//			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.TITLE);
+//			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_DESC);
+//			ed.commit();
+//			fetch();
+//			break;
+//		case MENU_SORT_BY_YEAR_ASC:
+//			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
+//			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.YEAR);
+//			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_ASC);
+//			ed.commit();
+//			fetch();
+//			break;
+//		case MENU_SORT_BY_YEAR_DESC:
+//			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
+//			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.YEAR);
+//			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_DESC);
+//			ed.commit();
+//			fetch();
+//			break;
+//		case MENU_SORT_BY_RATING_ASC:
+//			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
+//			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.RATING);
+//			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_ASC);
+//			ed.commit();
+//			fetch();
+//			break;
+//		case MENU_SORT_BY_RATING_DESC:
+//			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
+//			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.RATING);
+//			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_DESC);
+//			ed.commit();
+//			fetch();
+//			break;
+//		case MENU_SORT_BY_DATE_ADDED_ASC:
+//			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
+//			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.DATE_ADDED);
+//			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_ASC);
+//			ed.commit();
+//			fetch();
+//			break;
+//		case MENU_SORT_BY_DATE_ADDED_DESC:
+//			ed = mActivity.getPreferences(Context.MODE_PRIVATE).edit();
+//			ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.DATE_ADDED);
+//			ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_DESC);
+//			ed.commit();
+//			fetch();
+//			break;
+//		default:
+//			super.onOptionsItemSelected(item);
+//		}
 	}
 	
 	@Override
 	protected void refreshList() {
 		hideMessage();
-		fetch();
+		mDelegate.fetch(mActivity);
 	}
 	
 	private class MovieAdapter extends ArrayAdapter<Movie> {
@@ -345,8 +349,9 @@ public class MovieListController extends ListController implements IController {
 		public View getView(int position, View convertView, ViewGroup parent) {
 
 			final FiveLabelsItemView view;
+			IManager videoManager = mDelegate.getVideoManager();
 			if (convertView == null) {
-				view = new FiveLabelsItemView(mActivity, mVideoManager, parent.getWidth(), mFallbackBitmap, mList.getSelector(), false);
+				view = new FiveLabelsItemView(mActivity, videoManager, parent.getWidth(), mFallbackBitmap, mList.getSelector(), false);
 			} else {
 				view = (FiveLabelsItemView)convertView;
 			}
@@ -362,8 +367,8 @@ public class MovieListController extends ListController implements IController {
 			view.bottomright = String.valueOf(movie.rating);
 			
 			if (mLoadCovers) {
-				if(mVideoManager.coverLoaded(movie, mThumbSize)){
-					view.setCover(mVideoManager.getCoverSync(movie, mThumbSize));
+				if(videoManager.coverLoaded(movie, mThumbSize)){
+					view.setCover(videoManager.getCoverSync(movie, mThumbSize));
 				}else{
 					view.setCover(null);
 					view.getResponse().load(movie, !mPostScrollLoader.isListIdle());
@@ -376,24 +381,30 @@ public class MovieListController extends ListController implements IController {
 	private static final long serialVersionUID = 1088971882661811256L;
 
 	public void onActivityPause() {
-		if (mVideoManager != null) {
-			mVideoManager.setController(null);
-			mVideoManager.postActivity();
-		}
-		if (mControlManager != null) {
-			mControlManager.setController(null);
+//		if (mVideoManager != null) {
+//			mVideoManager.setController(null);
+//			mVideoManager.postActivity();
+//		}
+//		if (mControlManager != null) {
+//			mControlManager.setController(null);
+//		}
+		if( mDelegate != null ) {
+			mDelegate.onActivityPause();
 		}
 		super.onActivityPause();
 	}
 
 	public void onActivityResume(Activity activity) {
 		super.onActivityResume(activity);
-		if (mVideoManager != null) {
-			mVideoManager.setController(this);
+		if( mDelegate != null ) {
+			mDelegate.onActivityResume(activity);
 		}
-		if (mControlManager != null) {
-			mControlManager.setController(this);
-		}
+//		if (mVideoManager != null) {
+//			mVideoManager.setController(this);
+//		}
+//		if (mControlManager != null) {
+//			mControlManager.setController(this);
+//		}
 	}
 
 }

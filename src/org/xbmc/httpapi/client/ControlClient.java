@@ -479,4 +479,9 @@ public class ControlClient implements IControlClient {
 			}
 		}
 	}
+
+	public boolean activateWindow(INotifiableManager manager,
+			String windowName, String viewName) {
+		throw new IllegalAccessError("activateWindow is not implemented for the HTTP API - use the JSON-RPC API");
+	}
 }

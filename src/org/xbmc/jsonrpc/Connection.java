@@ -324,7 +324,7 @@ public class Connection {
 					throw new Exception(response.get(ERROR_FIELD).get("message").getTextValue());
 				}
 			} else {
-				return response.get(RESULT_FIELD);
+				return result;
 			}
 		} catch (Exception e) {
 			manager.onError(e);

@@ -22,6 +22,7 @@
 package org.xbmc.jsonrpc.client;
 
 import org.codehaus.jackson.JsonNode;
+import org.codehaus.jackson.node.ObjectNode;
 import org.xbmc.api.business.INotifiableManager;
 import org.xbmc.api.data.IControlClient;
 import org.xbmc.api.info.PlayStatus;
@@ -227,6 +228,22 @@ public class ControlClient extends Client implements IControlClient {
 	 */
 	public int getVolume(INotifiableManager manager) {
 		return mConnection.getInt(manager, "Application.GetProperties", obj().p("playerid", getActivePlayerId(manager)).p(PARAM_PROPERTIES, arr().add("volume")), "volume");
+	}
+	
+	/**
+	 * Open a window on the XBMC screen
+	 * @param manager
+	 * @param windowName - eg: "videos"
+	 * @param viewName - optional, eg: "MovieTitles"
+	 * @return true on success, false otherwise
+	 */
+	public boolean activateWindow(INotifiableManager manager, String windowName, String viewName ) {
+		ObjNode params = obj().p("window", windowName);
+		if( viewName != null ) {
+			params.p("parameters", arr().add(viewName));
+		}
+		String response = mConnection.getString( manager, "GUI.ActivateWindow", params );
+		return response.equals("OK");
 	}
 	
 	/**

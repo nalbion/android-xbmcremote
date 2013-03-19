@@ -22,6 +22,7 @@
 package org.xbmc.api.business;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.xbmc.api.object.FileLocation;
 import org.xbmc.api.type.DirectoryMask;
@@ -35,6 +36,13 @@ import android.content.Context;
  * @author Team XBMC
  */
 public interface IInfoManager extends IManager {
+	
+	/**
+	 * Retrieve info labels about XBMC and the system
+	 * @param response Response object
+	 * @param labelNames
+	 */
+	public void getInfoLabels(final DataResponse<Map<String,String>> response, final String[] labelNames, final Context context);
 	
 	/**
 	 * Returns any system info variable, see {@link org.xbmc.api.info.SystemInfo}

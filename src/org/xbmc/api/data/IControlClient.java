@@ -144,6 +144,15 @@ public interface IControlClient extends IClient {
 	public int getVolume(INotifiableManager manager);
 	
 	/**
+	 * Open a window on the XBMC screen
+	 * @param manager
+	 * @param windowName - eg: "videos"
+	 * @param viewName - optional, eg: "MovieTitles"
+	 * @return true on success, false otherwise
+	 */
+	public boolean activateWindow(INotifiableManager manager, String windowName, String viewName );
+	
+	/**
 	 * Navigates... UP!
 	 * @param manager Manager reference
 	 * @return true on success, false otherwise.

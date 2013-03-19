@@ -3,6 +3,7 @@ package org.xbmc.httpapi.client;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.xbmc.api.business.INotifiableManager;
 import org.xbmc.api.data.IInfoClient;
@@ -180,5 +181,10 @@ public class InfoClient implements IInfoClient {
 	 */
 	public String getVideoInfo(INotifiableManager manager, int field) {
 		return mConnection.getString(manager, "GetVideoLabel", String.valueOf(field));
+	}
+
+	public Map<String, String> getInfoLabels(INotifiableManager manager,
+			String[] labelNames) {
+		throw new IllegalAccessError("getInfoLabels is not implemented for the HTTP API - use the JSON-RPC API");
 	}
 }

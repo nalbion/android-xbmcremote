@@ -32,7 +32,7 @@ import org.xbmc.api.type.MediaType;
  * 
  * @author Team XBMC
  */
-public class Movie implements ICoverArt, Serializable, INamedResource {
+public class Movie implements INamedCover, Serializable {
 	
 	/**
 	 * Points to where the movie thumbs are stored

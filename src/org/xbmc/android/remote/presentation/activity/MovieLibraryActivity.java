@@ -27,7 +27,9 @@ import org.xbmc.android.remote.presentation.controller.ActorListController;
 import org.xbmc.android.remote.presentation.controller.FileListController;
 import org.xbmc.android.remote.presentation.controller.MovieGenreListController;
 import org.xbmc.android.remote.presentation.controller.MovieListController;
+import org.xbmc.android.remote.presentation.controller.MoviePosterWrapController;
 import org.xbmc.android.remote.presentation.controller.RemoteController;
+import org.xbmc.android.remote.presentation.widget.PagerContainer;
 import org.xbmc.android.widget.slidingtabs.SlidingTabActivity;
 import org.xbmc.android.widget.slidingtabs.SlidingTabHost;
 import org.xbmc.android.widget.slidingtabs.SlidingTabHost.OnTabChangeListener;
@@ -41,6 +43,7 @@ import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.Handler;
 import android.preference.PreferenceManager;
+import android.support.v4.view.ViewPager;
 import android.view.ContextMenu;
 import android.view.ContextMenu.ContextMenuInfo;
 import android.view.KeyEvent;
@@ -59,6 +62,7 @@ public class MovieLibraryActivity extends SlidingTabActivity implements ViewTree
 	private ActorListController mActorController;
 	private MovieGenreListController mGenresController;
 	private FileListController mFileController;
+	private MoviePosterWrapController mMoviePosterWrapController;
 	
 	private static final int MENU_NOW_PLAYING = 301;
 	private static final int MENU_UPDATE_LIBRARY = 302;
@@ -86,6 +90,7 @@ public class MovieLibraryActivity extends SlidingTabActivity implements ViewTree
 		mTabHost.addTab(mTabHost.newTabSpec("tab_actors", "Actors", R.drawable.st_actor_on, R.drawable.st_actor_off).setBigIcon(R.drawable.st_actor_over).setContent(R.id.actorlist_outer_layout));
 		mTabHost.addTab(mTabHost.newTabSpec("tab_genres", "Genres", R.drawable.st_genre_on, R.drawable.st_genre_off).setBigIcon(R.drawable.st_genre_over).setContent(R.id.genrelist_outer_layout));
 		mTabHost.addTab(mTabHost.newTabSpec("tab_files", "File Mode", R.drawable.st_filemode_on, R.drawable.st_filemode_off).setBigIcon(R.drawable.st_filemode_over).setContent(R.id.filelist_outer_layout));
+		mTabHost.addTab(mTabHost.newTabSpec("tab_screen", "Screen Mode", R.drawable.st_tv_on, R.drawable.st_tv_off).setBigIcon(R.drawable.st_tv_over).setContent(R.id.screenmovielist_outer_layout));
 		
 		mTabHost.getViewTreeObserver().addOnGlobalLayoutListener(this);
 
@@ -106,6 +111,10 @@ public class MovieLibraryActivity extends SlidingTabActivity implements ViewTree
 		mFileController = new FileListController(MediaType.VIDEO);
 		mFileController.findTitleView(findViewById(R.id.filelist_outer_layout));
 		mFileController.findMessageView(findViewById(R.id.filelist_outer_layout));
+		
+		mMoviePosterWrapController = new MoviePosterWrapController();
+		mMoviePosterWrapController.findTitleView(findViewById(R.id.screenmovielist_outer_layout));
+		mMoviePosterWrapController.findMessageView(findViewById(R.id.screenmovielist_outer_layout));
 		
 		mTabHost.setOnTabChangedListener(new OnTabChangeListener() {
 			public void onTabChanged(String tabId) {
@@ -138,14 +147,17 @@ public class MovieLibraryActivity extends SlidingTabActivity implements ViewTree
 		if (tabId.equals("tab_movies")) {
 			mMovieController.onCreate(MovieLibraryActivity.this, mHandler, (ListView)findViewById(R.id.movielist_list));
 		}
-		if (tabId.equals("tab_actors")) {
+		else if (tabId.equals("tab_actors")) {
 			mActorController.onCreate(MovieLibraryActivity.this, mHandler, (ListView)findViewById(R.id.actorlist_list));
 		}
-		if (tabId.equals("tab_genres")) {
+		else if (tabId.equals("tab_genres")) {
 			mGenresController.onCreate(MovieLibraryActivity.this, mHandler, (ListView)findViewById(R.id.genrelist_list));
 		}
-		if (tabId.equals("tab_files")) {
+		else if (tabId.equals("tab_files")) {
 			mFileController.onCreate(MovieLibraryActivity.this, mHandler, (ListView)findViewById(R.id.filelist_list));
+		} 
+		else if (tabId.equals("tab_screen")) {
+			mMoviePosterWrapController.onCreate(MovieLibraryActivity.this, mHandler);
 		}
 	}
 	
@@ -165,6 +177,9 @@ public class MovieLibraryActivity extends SlidingTabActivity implements ViewTree
 				break;
 			case 3:
 				mFileController.onCreateOptionsMenu(menu);
+				break;
+			case 4:
+				mMoviePosterWrapController.onCreateOptionsMenu(menu);
 				break;
 		}
 		menu.add(0, MENU_UPDATE_LIBRARY, 0, "Update Library").setIcon(R.drawable.menu_refresh);
@@ -188,6 +203,9 @@ public class MovieLibraryActivity extends SlidingTabActivity implements ViewTree
 			break;
 		case 3:
 			mFileController.onOptionsItemSelected(item);
+			break;
+		case 4:
+			mMoviePosterWrapController.onOptionsItemSelected(item);
 			break;
 		}
 		
@@ -229,6 +247,9 @@ public class MovieLibraryActivity extends SlidingTabActivity implements ViewTree
 			case 3:
 				mFileController.onCreateContextMenu(menu, v, menuInfo);
 				break;
+			case 4:
+				mMoviePosterWrapController.onCreateContextMenu(menu, v, menuInfo);
+				break;
 		}
 	}
 	
@@ -246,6 +267,9 @@ public class MovieLibraryActivity extends SlidingTabActivity implements ViewTree
 			break;
 		case 3:
 			mFileController.onContextItemSelected(item);
+			break;
+		case 4:
+			mMoviePosterWrapController.onContextItemSelected(item);
 			break;
 		}
 		return super.onContextItemSelected(item);
@@ -274,6 +298,7 @@ public class MovieLibraryActivity extends SlidingTabActivity implements ViewTree
 		mActorController.onActivityResume(this);
 		mGenresController.onActivityResume(this);
 		mFileController.onActivityResume(this);
+		mMoviePosterWrapController.onActivityResume(this);
 		mConfigurationManager.onActivityResume(this);
 	}
 	
@@ -284,6 +309,7 @@ public class MovieLibraryActivity extends SlidingTabActivity implements ViewTree
 		mActorController.onActivityPause();
 		mGenresController.onActivityPause();
 		mFileController.onActivityPause();
+		mMoviePosterWrapController.onActivityPause();
 		mConfigurationManager.onActivityPause();
 	}
 }
