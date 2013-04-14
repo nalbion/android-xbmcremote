@@ -267,6 +267,15 @@ public class ControlClient implements IControlClient {
 	}
 	
 	/**
+	 * Navigates... BACK!
+	 * @param manager Manager reference
+	 * @return true on success, false otherwise.
+	 */
+	public boolean navBack(INotifiableManager manager) {
+		return mConnection.getBoolean(manager, "Action", String.valueOf(GuiActions.ACTION_STEP_BACK));
+	}
+	
+	/**
 	 * Takes either "video" or "music" as a parameter to begin updating the 
 	 * corresponding database. 
 	 * 

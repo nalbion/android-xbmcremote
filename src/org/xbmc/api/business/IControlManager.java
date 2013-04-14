@@ -38,7 +38,8 @@ public interface IControlManager extends IManager {
 		DOWN,
 		LEFT,
 		RIGHT,
-		SELECT
+		SELECT,
+		BACK
 	}
 
 	/**
@@ -56,6 +57,13 @@ public interface IControlManager extends IManager {
 	 * @param command - UP/DOWN/LEFT/RIGHT/SELECT
 	 */
 	public void navigate(final DataResponse<Boolean> response, final NavigateCommand command, final Context context);
+	
+	/**
+	 * Open a window on the XBMC screen
+	 * @param response
+	 * @param command - UP/DOWN/LEFT/RIGHT/SELECT
+	 */
+	public void navigate(final DataResponse<Boolean> response, final NavigateCommand command, final int times, final Context context);
 	
 	/**
 	 * Starts playing the media file <code>filename</code> .

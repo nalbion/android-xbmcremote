@@ -18,6 +18,8 @@ import org.xbmc.api.type.MediaType;
 import org.xbmc.api.type.SortType;
 import org.xbmc.jsonrpc.Connection;
 
+import android.util.Log;
+
 /**
  * The InfoClient basically takes care of everything else not covered by the
  * other clients (music, video and control). That means its tasks are bound to
@@ -130,22 +132,31 @@ public class InfoClient extends Client implements IInfoClient {
 	 * @return
 	 */
 	public Map<String, String> getInfoLabels(INotifiableManager manager, String[] labelNames) {
-		ArrayNode labelsNode = arr();
-		int i = labelNames.length;
-		while( i-- != 0 ) {
-			labelsNode.add(labelNames[i]);
-		}
-		JsonNode result = mConnection.getJson(manager, "XBMC.GetInfoLabels", obj().p("labels", labelsNode));
+		try {
+			ArrayNode labelsNode = arr();
+			int i = labelNames.length;
+			while( i-- != 0 ) {
+				labelsNode.add(labelNames[i]);
+			}
+			JsonNode result = mConnection.getJson(manager, "XBMC.GetInfoLabels", obj().p("labels", labelsNode));
 		
-		i = labelNames.length;
-		Map<String, String> labelValues = new HashMap<String, String>();
-		while( i-- != 0 ) {
-			String name = labelNames[i];
-			String value = result.get(name).getTextValue();
-			labelValues.put(name, value);
+			i = labelNames.length;
+			Map<String, String> labelValues = new HashMap<String, String>();
+			while( i-- != 0 ) {
+				String name = labelNames[i];
+				JsonNode node = result.get(name);
+				if( node != null ) {
+					String value = node.getTextValue();
+					labelValues.put(name, value);
+				} else {
+					Log.i(TAG, "response has no value for " + name);
+				}
+			}
+			return labelValues;
+		} catch( Exception e ) {
+			Log.d(TAG, "Error in GetInfoLabels response: " + e.getMessage());
+			return new HashMap<String, String>();
 		}
-		
-		return labelValues;
 	}
 	
 	/**

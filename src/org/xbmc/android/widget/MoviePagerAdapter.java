@@ -61,8 +61,10 @@ public class MoviePagerAdapter extends PosterWrapPagerAdapter<INamedCover> {
 				if(videoManager.coverLoaded(item, mThumbSize)){
 					view.setCover(videoManager.getCoverSync(item, mThumbSize));
 				}else{
-					view.setCover(null);
-//TODO: load cover				view.getResponse().load(movie, !mPostScrollLoader.isListIdle());
+					Log.d(TAG, "Cover not loaded for " + item);
+//					view.setCover(null);
+//TODO: load cover				
+					//view.getResponse().load(movie, !mPostScrollLoader.isListIdle());
 				}
 			}
 		}

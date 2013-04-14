@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Map;
 
 import org.xbmc.android.remote.R;
+import org.xbmc.android.remote.business.AbstractManager;
 import org.xbmc.android.remote.business.ControlManager;
 import org.xbmc.android.remote.business.ManagerFactory;
 import org.xbmc.android.remote.presentation.widget.FiveLabelsItemView;
@@ -21,8 +22,11 @@ import org.xbmc.api.object.INamedCover;
 import org.xbmc.api.object.Movie;
 import org.xbmc.api.object.ParentFolder;
 import org.xbmc.api.presentation.INotifiableController;
+import org.xbmc.api.type.SortType;
 
 import android.app.Activity;
+import android.content.Context;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Handler;
@@ -59,6 +63,7 @@ public class MoviePosterWrapController extends ListController
 	public static final int ITEM_CONTEXT_PLAY = 1;
 	private MovieControllerDelegate mDelegate;
 	private IControlManager mControlManager;
+	private IInfoManager mInfoManager;
 	
 	private boolean mLoadCovers = false;
 
@@ -74,6 +79,7 @@ public class MoviePosterWrapController extends ListController
 			super.onCreate(activity, handler);
 			mDelegate = new MovieControllerDelegate(activity, this, this);
 			mControlManager = ManagerFactory.getControlManager(this);
+			mInfoManager = ManagerFactory.getInfoManager(this);
 			
 			PagerContainer container = (PagerContainer)activity.findViewById(R.id.screenmoviepager_container);
 			container.setPageChangeListener(this);
@@ -105,11 +111,38 @@ public class MoviePosterWrapController extends ListController
 //				}
 //			});
 //			mList.setOnKeyListener(new ListControllerOnKeyListener<Movie>());
-			mDelegate.fetch(activity);
+			
+			
 		}
 		
 		// Open the Movies list on the XBMC screen
-		mControlManager.activateWindow(new DataResponse<Boolean>(), "videos", "MovieTitles", activity);
+		final Activity _activity = activity;
+		final SharedPreferences.Editor ed;
+		ed = activity.getPreferences(Context.MODE_PRIVATE).edit();
+		
+		mControlManager.activateWindow(new DataResponse<Boolean>() {
+			@Override
+			public void run() {
+//				mControlManager.navigate(new DataResponse<Boolean>(){
+//					@Override
+//					public void run() {
+//						mControlManager.navigate(new DataResponse<Boolean>(), NavigateCommand.BACK, context);
+//					}
+//				}, NavigateCommand.UP, context);
+				
+				// get sort/filter criteria
+				mInfoManager.getInfoLabels(new DataResponse<Map<String,String>>() {
+					@Override
+					public void run() {
+						int sortType = SortType.parseSortMethod( value.get("Container.SortMethod") );
+						ed.putInt(AbstractManager.PREF_SORT_BY_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, sortType);
+//						ed.putString(AbstractManager.PREF_SORT_ORDER_PREFIX + AbstractManager.PREF_SORT_KEY_MOVIE, SortType.ORDER_ASC);
+						ed.commit();
+						mDelegate.fetch(_activity);
+					}
+				}, new String[]{"Container.Viewmode", "Container.SortMethod"}, _activity);
+			}
+		}, "videos", "MovieTitles", activity);
 	}
 	
 	/**
@@ -167,8 +200,7 @@ public class MoviePosterWrapController extends ListController
 //TODO:NDA probably need to reinstate this to get it to sync with the screen view, but that would break the container repainting	mPager.setOnPageChangeListener( adapter );
 //		mViewPager.setCurrentItem(0);
 		
-		IInfoManager infoManager = ManagerFactory.getInfoManager(this);
-		infoManager.getInfoLabels(new DataResponse<Map<String,String>>() {
+		mInfoManager.getInfoLabels(new DataResponse<Map<String,String>>() {
 			@Override
 			public void run() {
 				String currentTitle = value.get("Control.GetLabel");
@@ -183,8 +215,26 @@ public class MoviePosterWrapController extends ListController
     public void onPageScrolled(int position, float positionOffset, int positionOffsetPixels) {}
  
     public void onPageSelected(int position) {
-    	// TODO: figure out which way to scroll and by how far
-    	mControlManager.navigate(new DataResponse<Boolean>(), NavigateCommand.RIGHT, this.mActivity);
+    	final int pagerPosition = position % ((MoviePagerAdapter)mPager.getAdapter()).getActualCount();
+    	mInfoManager.getInfoLabels(new DataResponse<Map<String,String>>() {
+			@Override
+			public void run() {
+				String currentTitle = value.get("Container.ListItem(0).Label");
+				int screenPosition = ((MoviePagerAdapter)mPager.getAdapter()).getItemPositionByTitle(currentTitle);
+				int diff = pagerPosition - screenPosition;
+				if( diff < 0 ) {
+					mControlManager.navigate(new DataResponse<Boolean>(), NavigateCommand.LEFT, -diff, 
+											MoviePosterWrapController.this.mActivity);
+				} else {
+					mControlManager.navigate(new DataResponse<Boolean>(), NavigateCommand.RIGHT, diff, 
+											MoviePosterWrapController.this.mActivity);
+				}
+			}
+		}, new String[]{"Container.ListItem(-2).Label",
+						"Container.ListItem(-1).Label",
+						"Container.ListItem(0).Label",
+						"Container.ListItem(1).Label",
+						"Container.ListItem(2).Label"}, this.mActivity);
     }
  
     public void onPageScrollStateChanged(int state) {}

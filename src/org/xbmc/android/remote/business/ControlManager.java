@@ -27,6 +27,7 @@ import org.xbmc.api.business.INotifiableManager;
 import org.xbmc.api.data.IControlClient;
 import org.xbmc.api.data.IControlClient.ICurrentlyPlaying;
 import org.xbmc.api.type.SeekType;
+import org.xbmc.eventclient.ButtonCodes;
 
 import android.content.Context;
 
@@ -36,6 +37,63 @@ import android.content.Context;
  * @author Team XBMC
  */
 public class ControlManager extends AbstractManager implements IControlManager, INotifiableManager {
+	
+	/**
+	 * Open a window on the XBMC screen
+	 * @param response
+	 * @param windowName - eg: "videos"
+	 * @param viewName - optional, eg: "MovieTitles"
+	 */
+	public void activateWindow(final DataResponse<Boolean> response, final String windowName, final String viewName, final Context context) {
+		mHandler.post(new Command<Boolean>(response, this){
+			@Override
+			public void doRun() throws Exception {
+				response.value = control(context).activateWindow(ControlManager.this, windowName, viewName);
+			}
+		});
+	}
+	
+	/**
+	 * Open a window on the XBMC screen
+	 * @param response
+	 * @param command - UP/DOWN/LEFT/RIGHT/SELECT
+	 */
+	public void navigate(final DataResponse<Boolean> response, final NavigateCommand command, final Context context) {
+		navigate(response, command, 1, context);
+	}
+	public void navigate(final DataResponse<Boolean> response, final NavigateCommand command, final int times, final Context context) {
+		mHandler.post(new Command<Boolean>(response, this){
+			@Override
+			public void doRun() throws Exception {
+				// mEventClient.sendButton("R1", ButtonCodes.REMOTE_UP, false, true, true, (short)0, (byte)0);
+				int i = times;
+				switch( command ) {
+				case UP:
+					while(i-- != 0)
+						response.value = control(context).navUp(ControlManager.this);
+					break;
+				case DOWN:
+					while(i-- != 0)
+						response.value = control(context).navDown(ControlManager.this);
+					break;
+				case LEFT:
+					while(i-- != 0)
+						response.value = control(context).navLeft(ControlManager.this);
+					break;
+				case RIGHT:
+					while(i-- != 0)
+						response.value = control(context).navRight(ControlManager.this);
+					break;
+				case SELECT:
+					response.value = control(context).navSelect(ControlManager.this);
+					break;
+				case BACK:
+					response.value = control(context).navBack(ControlManager.this);
+					break;
+				}
+			}
+		});
+	}
 	
 	/**
 	 * Starts playing the media file <code>filename</code> .
@@ -50,7 +108,7 @@ public class ControlManager extends AbstractManager implements IControlManager, 
 			}
 		});
 	}
-
+	
 	/**
 	 * Starts playing a whole folder
 	 * @param response Response object

@@ -37,6 +37,31 @@ public abstract class SortType {
 	public static final int EPISODE_TITLE = 9;
 	public static final int EPISODE_RATING = 10;
 	public static final int DATE_ADDED = 11;
+	public static final int MPAA_RATING = 12;
+	public static final int DURATION = 13;
+	public static final int PLAY_COUNT = 14;
 	
 	public static final int DONT_SORT = -1;
+	
+	/**
+	 * @param sortMethod - value returned from JSON-RPC: {"jsonrpc":"2.0","method":"XBMC.GetInfoLabels","params": {"labels":["Container.SortMethod"]}, "id":1}
+	 * @return
+	 */
+	public static int parseSortMethod( String sortMethod ) {
+		if( "Rating".equals(sortMethod) ) {
+			return RATING;
+		} else if( "MPAA rating".equals(sortMethod) ) {
+			return MPAA_RATING;
+		} else if( "Duration".equals(sortMethod) ) {
+			return DURATION;
+		} else if( "Date added".equals(sortMethod) ) {
+			return DATE_ADDED;
+		} else if( "Play count".equals(sortMethod) ) {
+			return PLAY_COUNT;
+		} else if( "Title".equals(sortMethod) ) {
+			return TITLE;
+		} else if( "Year".equals(sortMethod) ) {
+			return YEAR;
+		} else return DONT_SORT;
+	}
 }

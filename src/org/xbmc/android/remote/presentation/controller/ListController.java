@@ -72,9 +72,9 @@ public abstract class ListController extends AbstractController implements Seria
 	
 	protected AbsListView mList;
 	
-	private TextView mTitleView;
-	private ViewGroup mMessageGroup;
-	private TextView mMessageText;
+	protected TextView mTitleView;
+	protected ViewGroup mMessageGroup;
+	protected TextView mMessageText;
 	private boolean hideWatched;
 	private boolean isCreated = false;
 	
@@ -82,8 +82,12 @@ public abstract class ListController extends AbstractController implements Seria
 	protected IdleListDetector mPostScrollLoader;
 
 	public void onCreate(Activity activity, Handler handler, AbsListView list) {
-		super.onCreate(activity, handler);
+		this.onCreate(activity, handler);
 		mList = list;
+	}
+	
+	public void onCreate(Activity activity, Handler handler) {
+		super.onCreate(activity, handler);
 		mActivity = activity;
 		SharedPreferences sp = mActivity.getSharedPreferences("global", Context.MODE_PRIVATE);
 		hideWatched = sp.getBoolean(PREF_HIDE_WATCHED, false);

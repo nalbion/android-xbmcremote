@@ -60,6 +60,22 @@ public class VideoManager extends AbstractManager implements IVideoManager, ISor
 	 * Gets all movies from database
 	 * @param response Response object
 	 */
+	public void getMovies(final DataResponse<ArrayList<Movie>> response, final Context context, final int sortBy, final String sortOrder) {
+		mHandler.post(new Command<ArrayList<Movie>>(response, this) {
+			@Override
+			public void doRun() throws Exception {
+				response.value = video(context).getMovies(VideoManager.this, 
+														(sortBy != 0) ? sortBy : getSortBy(SortType.TITLE), 
+														(sortOrder != null) ? sortOrder : getSortOrder(), 
+														getHideWatched(context));
+			}
+		});
+	}
+	
+	/**
+	 * Gets all movies from database
+	 * @param response Response object
+	 */
 	public void getMovies(final DataResponse<ArrayList<Movie>> response, final Context context) {
 		mHandler.post(new Command<ArrayList<Movie>>(response, this) {
 			@Override

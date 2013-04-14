@@ -292,6 +292,15 @@ public class ControlClient extends Client implements IControlClient {
 	}
 	
 	/**
+	 * Navigates... BACK!
+	 * @param manager Manager reference
+	 * @return true on success, false otherwise.
+	 */
+	public boolean navBack(INotifiableManager manager) {
+		return mConnection.getString(manager, "Input.Back", null).equals("OK");
+	}
+	
+	/**
 	 * Takes either "video" or "music" as a parameter to begin updating the 
 	 * corresponding database. 
 	 * 

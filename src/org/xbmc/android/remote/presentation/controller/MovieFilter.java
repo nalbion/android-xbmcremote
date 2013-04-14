@@ -37,4 +37,8 @@ public class MovieFilter {
 			videoManager.getMovies(response, activity.getApplicationContext());
 		}
 	}
+	
+	public void getMovies( IVideoManager videoManager, DataResponse<ArrayList<Movie>> response, Activity activity, int sortBy, String sortOrder ) {
+		videoManager.getMovies(response, activity.getApplicationContext(), sortBy, sortOrder);
+	}
 }

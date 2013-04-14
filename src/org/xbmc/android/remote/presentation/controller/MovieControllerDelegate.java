@@ -74,7 +74,12 @@ public class MovieControllerDelegate {
 		return mVideoManager;
 	}
 	
-	public void fetch(final Activity activity) {
+	/** 
+	 * @param activity
+	 * @param sortBy - {link SortType.ALBUM} etc. If 0, will be looked up from shared preferences
+	 * @param sortOrder - {@link SortType.ORDER_ASC} or {@link SortType.ORDER_DESC}.  If null will be looked up from shared preferences
+	 */
+	public void fetch(final Activity activity) { //, int sortBy, String sortOrder) {
 		final String title = mMovieFilter.toString();
 		DataResponse<ArrayList<Movie>> response = new DataResponse<ArrayList<Movie>>() {
 			public void run() {
@@ -90,7 +95,7 @@ public class MovieControllerDelegate {
 		
 		mController.showOnLoading();
 		mController.setTitle(title + "...");
-		mMovieFilter.getMovies(mVideoManager, response, activity);
+		mMovieFilter.getMovies(mVideoManager, response, activity); //, sortBy, sortOrder);
 	}
 	
 	/**

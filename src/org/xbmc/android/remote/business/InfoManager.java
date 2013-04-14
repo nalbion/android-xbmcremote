@@ -22,6 +22,7 @@
 package org.xbmc.android.remote.business;
 
 import java.util.ArrayList;
+import java.util.Map;
 
 import org.xbmc.api.business.DataResponse;
 import org.xbmc.api.business.IInfoManager;
@@ -38,6 +39,20 @@ import android.content.Context;
  * @author Team XBMC
  */
 public class InfoManager extends AbstractManager implements IInfoManager, INotifiableManager {
+	
+	/**
+	 * Retrieve info labels about XBMC and the system
+	 * @param response Response object
+	 * @param labelNames
+	 */
+	public void getInfoLabels(final DataResponse<Map<String,String>> response, final String[] labelNames, final Context context) {
+		mHandler.post(new Command<Map<String,String>>(response, this){
+			@Override
+			public void doRun() throws Exception {
+				response.value = info(context).getInfoLabels(InfoManager.this, labelNames);
+			}
+		});
+	}
 	
 	/**
 	 * Returns any system info variable, see {@link org.xbmc.api.info.SystemInfo}

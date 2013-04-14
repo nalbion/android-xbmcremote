@@ -26,6 +26,7 @@ import java.util.ArrayList;
 import org.xbmc.api.object.Actor;
 import org.xbmc.api.object.Genre;
 import org.xbmc.api.object.Movie;
+import org.xbmc.api.type.SortType;
 
 import android.content.Context;
 
@@ -48,6 +49,14 @@ public interface IVideoManager extends IManager {
 	 * @param response Response object
 	 */
 	public void getMovies(final DataResponse<ArrayList<Movie>> response, final Context context);
+	
+	/**
+	 * @param response
+	 * @param context
+	 * @param sortBy - {link SortType.ALBUM} etc. If 0, will be looked up from shared preferences
+	 * @param sortOrder - {@link SortType.ORDER_ASC} or {@link SortType.ORDER_DESC}.  If null will be looked up from shared preferences
+	 */
+	public void getMovies(final DataResponse<ArrayList<Movie>> response, final Context context, int sortBy, String sortOrder);
 	
 	/**
 	 * SYNCHRONOUSLY gets all movies from database

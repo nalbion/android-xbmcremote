@@ -188,6 +188,12 @@ public interface IControlClient extends IClient {
 	public boolean navSelect(INotifiableManager manager);
 	
 	/**
+	 * @param manager Manager reference
+	 * @return true on success, false otherwise.
+	 */
+	public boolean navBack(INotifiableManager manager);
+	
+	/**
 	 * Takes either "video" or "music" as a parameter to begin updating the 
 	 * corresponding database. 
 	 * 
